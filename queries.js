@@ -7,6 +7,7 @@ const pool = new Pool({
     port: 5432,
     ssl: true
 });
+
 // const pg = require('pg')
 // var client = new pg.Client({
 //     user: 'ZpiAdmin@serverzpi',
@@ -20,6 +21,19 @@ const pool = new Pool({
 // client.connect()
 
 const getUsers = (request, response) => {
+    pool.connect((err, client, release) => {
+        if (err) {
+            return console.error('Error acquiring client', err.stack)
+        }
+        client.query('SELECT * FROM public."GeoLocations"', (error, results) => {
+            release()
+            if (error) {
+                throw error
+            }
+            var res = results.rows;
+            response.status(200).json(res)
+        })
+    })
     // pool.query('SELECT * FROM public."GeoLocations"', (error, results) => {
     //     if (error) {
     //         throw error
@@ -27,7 +41,7 @@ const getUsers = (request, response) => {
     //     var res = results.rows;
     //     response.status(200).json(res)
     // })
-    response.status(200).json('Hejka co ty tu robisz?')
+    // response.status(200).json('Hejka co ty tu robisz?')
 }
 
 module.exports = {

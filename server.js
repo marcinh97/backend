@@ -85,14 +85,13 @@ app.post('/try', function(req, res){
 
 });
 
-
 const config = {
     host: 'serverzpi.postgres.database.azure.com',
     user: 'ZpiAdmin@serverzpi',
     password: 'Zpi?kam1lNOWAK',
     database: 'savingapp',
     port: 5432,
-    ssl: true
+    sslmode: 'required'
 };
 
 function checkOrSaveUser(id, name, lastName, email) {

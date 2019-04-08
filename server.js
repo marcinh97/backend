@@ -6,7 +6,7 @@ const app = require('./server_stuff');
 
 app.get('/users', db.getUsers);
 
-app.set('port', process.env.PORT || 8080);
+app.set('port', process.env.PORT || 3000);
 const pg = require('pg');
 const server = app.listen(app.get('port'), () => {
     console.log(`Listening on ${ server.address().port }`);

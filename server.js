@@ -12,9 +12,6 @@ const server = app.listen(app.get('port'), () => {
     console.log(`Listening on ${ server.address().port }`);
 });
 
-
-
-
 app.post('/checkUser',function(req,res)
 {
     const {OAuth2Client} = require('google-auth-library');

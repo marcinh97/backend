@@ -129,4 +129,75 @@ function checkOrSaveUser(id, name, lastName, email) {
     });
 }
 
+app.post("/tryLogin", async function(request, response){
+    let password = request.body.password;
+    let email = request.body.email;
+
+    const client = new pg.Client(config);
+
+
+    const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + password + '\'';
+    await client.connect();
+    await client.query(selectQuery)
+        .then(res => {
+            if (res.rows.length <= 0) {
+                response.writeHead(404, {'Content-Type': 'text/event-stream'});
+                response.send();
+                response.end();
+
+            } else {
+                response.writeHead(200, {'Content-Type': 'text/event-stream'});
+                response.send();
+                response.end();
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            return false;
+        });
+});
+
+
+app.post("/register", async function(request, response) {
+    let name = request.body.name;
+    let lastName = request.body.username;
+    let password = request.body.password;
+    let email = request.body.email;
+
+
+    const client = new pg.Client(config);
+
+
+    const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + password + '\'';
+    const insertQuery = 'INSERT INTO \"UserReg\" (firstname, lastname, email, password) VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + password + '\')';
+
+
+    await client.connect();
+    var exist = await client.query(selectQuery)
+        .then(res => {
+            if (res.rows.length <= 0) {
+                return false;
+
+            } else {
+                return true;
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            return false;
+        });
+
+    if(exist)
+    {
+        response.writeHead(404, {'Content-Type': 'text/event-stream'});
+        response.send();
+        response.end();
+    }
+    else {
+        await client.query(insertQuery);
+        response.writeHead(200, {'Content-Type': 'text/event-stream'});
+        response.send();
+        response.end();
+    }
+});
 

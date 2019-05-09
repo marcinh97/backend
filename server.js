@@ -91,7 +91,7 @@ const config = {
     password: 'Zpi?kam1lNOWAK',
     database: 'savingapp',
     port: 5432,
-    sslmode: 'required'
+    ssl: true
 };
 
 function checkOrSaveUser(id, name, lastName, email) {

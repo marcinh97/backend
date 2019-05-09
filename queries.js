@@ -60,6 +60,7 @@ const getUsers = (request, response) => {
     // response.status(200).json('Hejka co ty tu robisz?')
 }
 
+
 module.exports = {
     getUsers:getUsers
 }

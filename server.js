@@ -164,15 +164,15 @@ app.post("/register", async function(request, response) {
     let email = request.body.email;
 
 
-    const client = new pg.Client(config);
+    // const client = new pg.Client(config);
 
 
     const selectQuery = 'SELECT * FROM public."UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + password + '\'';
     const insertQuery = 'INSERT INTO public."UserReg" (firstname, lastname, email, password) VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + password + '\')';
 
 
-    await client.connect();
-    var exist = await client.query(selectQuery)
+    await config.connect();
+    var exist = await config.query(selectQuery)
         .then(res => {
             if (res.rows.length <= 0) {
                 return false;
@@ -193,7 +193,7 @@ app.post("/register", async function(request, response) {
         response.end();
     }
     else {
-        await client.query(insertQuery);
+        await config.query(insertQuery);
         response.writeHead(200, {'Content-Type': 'text/event-stream'});
         response.send();
         response.end();

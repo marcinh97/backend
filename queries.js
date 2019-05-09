@@ -20,6 +20,22 @@ const pool = new Pool({
 
 // client.connect()
 
+const getUserReg = (request, response) => {
+    pool.connect((err, client, release) => {
+        if (err) {
+            return console.error('Error acquiring client', err.stack)
+        }
+        client.query('SELECT * FROM public."GeoLocations"', (error, results) => {
+            release()
+            if (error) {
+                throw error
+            }
+            var res = results.rows;
+            response.status(200).json(res)
+        })
+    })
+}
+
 const getUsers = (request, response) => {
     pool.connect((err, client, release) => {
         if (err) {

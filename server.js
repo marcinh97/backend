@@ -42,7 +42,7 @@ function checkIfExists(id)
         }
         else {
             console.log(id);
-            const selectQuery = 'SELECT * FROM "Users" WHERE "id"=' + '\'' + id + '\'';
+            const selectQuery = 'SELECT * FROM public."Users" WHERE "id"=' + '\'' + id + '\'';
 
             client.query(selectQuery)
                 .then(res => {
@@ -103,9 +103,9 @@ function checkOrSaveUser(id, name, lastName, email) {
         }
         else {
             console.log(id);
-            const selectQuery = 'SELECT * FROM "Users" WHERE "id"=' + '\'' + id + '\'';
+            const selectQuery = 'SELECT * FROM public."Users" WHERE "id"=' + '\'' + id + '\'';
             console.log(selectQuery);
-            const query = 'INSERT INTO \"Users\"  VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + id + '\')';
+            const query = 'INSERT INTO public."Users" VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + id + '\')';
 
             client.query(selectQuery)
                 .then(res => {
@@ -117,7 +117,7 @@ function checkOrSaveUser(id, name, lastName, email) {
                     }
                     else
                     {
-                        console.log("powinienem dodac");
+                        console.log("powinienem dodac przepraszam moj masterze");
                         client.query(query);
                     }
 
@@ -136,7 +136,7 @@ app.post("/tryLogin", async function(request, response){
     const client = new pg.Client(config);
 
 
-    const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + password + '\'';
+    const selectQuery = 'SELECT * FROM public."UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + password + '\'';
     await client.connect();
     await client.query(selectQuery)
         .then(res => {
@@ -157,7 +157,6 @@ app.post("/tryLogin", async function(request, response){
         });
 });
 
-
 app.post("/register", async function(request, response) {
     let name = request.body.name;
     let lastName = request.body.username;
@@ -168,8 +167,8 @@ app.post("/register", async function(request, response) {
     const client = new pg.Client(config);
 
 
-    const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + password + '\'';
-    const insertQuery = 'INSERT INTO \"UserReg\" (firstname, lastname, email, password) VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + password + '\')';
+    const selectQuery = 'SELECT * FROM public."UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + password + '\'';
+    const insertQuery = 'INSERT INTO public."UserReg" (firstname, lastname, email, password) VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + password + '\')';
 
 
     await client.connect();

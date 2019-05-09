@@ -164,15 +164,16 @@ app.post("/register", async function(request, response) {
     let email = request.body.email;
 
 
-    // const client = new pg.Client(config);
+    const client = new pg.Client(config);
 
 
     const selectQuery = 'SELECT * FROM public."UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + password + '\'';
     const insertQuery = 'INSERT INTO public."UserReg" (firstname, lastname, email, password) VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + password + '\')';
 
+    console.log("Przed polaczeniem")
 
-    await config.connect();
-    var exist = await config.query(selectQuery)
+    await client.connect();
+    var exist = await client.query(selectQuery)
         .then(res => {
             if (res.rows.length <= 0) {
                 return false;
@@ -186,14 +187,18 @@ app.post("/register", async function(request, response) {
             return false;
         });
 
+
     if(exist)
     {
+        console.log("Istnieje")
         response.writeHead(404, {'Content-Type': 'text/event-stream'});
         response.send();
         response.end();
     }
     else {
-        await config.query(insertQuery);
+        console.log("Nie istnieje")
+        await client.query(insertQuery);
+        console.log("dodano")
         response.writeHead(200, {'Content-Type': 'text/event-stream'});
         response.send();
         response.end();

@@ -136,7 +136,7 @@ app.post("/tryLogin", async function(request, response){
     const client = new pg.Client(config);
 
 
-    const selectQuery = 'SELECT * FROM public."UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + password + '\'';
+    const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + password + '\'';
     await client.connect();
     await client.query(selectQuery)
         .then(res => {
@@ -147,6 +147,7 @@ app.post("/tryLogin", async function(request, response){
 
             } else {
                 response.writeHead(200, {'Content-Type': 'text/event-stream'});
+                response.write(''+res.rows[0].id);
                 response.send();
                 response.end();
             }
@@ -205,3 +206,30 @@ app.post("/register", async function(request, response) {
     }
 });
 
+
+app.post("/userOffers", async function(request, response){
+    let id = request.body.id;
+
+    console.log('id: '+id);
+
+    const client = new pg.Client(config);
+
+    const selectQuery = 'SELECT * FROM "Offer" WHERE "userId"=' + '\'' + id + '\'';
+
+    await client.connect();
+    await client.query(selectQuery)
+        .then(res => {
+            if (res.rows.length <= 0) {
+                response.status(404);
+
+            } else {
+                console.log('jeste tu');
+                response.send(JSON.stringify(res.rows));
+                response.status(200);
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            return false;
+        });
+});

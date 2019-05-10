@@ -1,6 +1,6 @@
 const db = require('./queries')
 
-
+const bcrypt = require('bcrypt')
 
 const app = require('./server_stuff');
 
@@ -133,23 +133,41 @@ app.post("/tryLogin", async function(request, response){
     let password = request.body.password;
     let email = request.body.email;
 
+
+
     const client = new pg.Client(config);
 
 
-    const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + password + '\'';
+    const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "isgoogle"=' + '\'' + false + '\'';
+    //const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + hash + '\'';
     await client.connect();
     await client.query(selectQuery)
         .then(res => {
             if (res.rows.length <= 0) {
+                console.log("brak takiego maila");
                 response.writeHead(404, {'Content-Type': 'text/event-stream'});
                 response.send();
                 response.end();
 
             } else {
-                response.writeHead(200, {'Content-Type': 'text/event-stream'});
-                response.write(''+res.rows[0].id);
-                response.send();
-                response.end();
+
+                bcrypt.compare(password,res.rows[0].password, function (err, result) {
+                    if (result == true) {
+                        console.log("jest mail i haslo");
+                        response.writeHead(200, {'Content-Type': 'text/event-stream'});
+                        response.write(''+res.rows[0].id);
+                        response.send();
+                        response.end();
+                    } else {
+                        console.log("jest mail ale bez hasla");
+                        response.writeHead(404, {'Content-Type': 'text/event-stream'});
+                        response.send();
+                        response.end();
+                    }
+
+                });
+
+
             }
         })
         .catch(err => {
@@ -164,14 +182,14 @@ app.post("/register", async function(request, response) {
     let password = request.body.password;
     let email = request.body.email;
 
+    let hash = bcrypt.hashSync(password, 10);
 
     const client = new pg.Client(config);
 
 
-    const selectQuery = 'SELECT * FROM public."UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + password + '\'';
-    const insertQuery = 'INSERT INTO public."UserReg" (firstname, lastname, email, password) VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + password + '\')';
+    const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "isgoogle"=' + '\'' + false + '\'';
+    const insertQuery = 'INSERT INTO \"UserReg\" (firstname, lastname, email, password, isgoogle) VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + hash + '\' ,\''+false+'\')';
 
-    console.log("Przed polaczeniem")
 
     await client.connect();
     var exist = await client.query(selectQuery)
@@ -188,22 +206,20 @@ app.post("/register", async function(request, response) {
             return false;
         });
 
-
     if(exist)
     {
-        console.log("Istnieje")
         response.writeHead(404, {'Content-Type': 'text/event-stream'});
         response.send();
         response.end();
     }
     else {
-        console.log("Nie istnieje")
         await client.query(insertQuery);
-        console.log("dodano")
         response.writeHead(200, {'Content-Type': 'text/event-stream'});
         response.send();
         response.end();
     }
+
+
 });
 
 

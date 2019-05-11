@@ -249,3 +249,31 @@ app.post("/userOffers", async function(request, response){
             return false;
         });
 });
+
+const Pool = require('pg').Pool
+const pool = new Pool({
+    user: 'ZpiAdmin@serverzpi',
+    host: 'serverzpi.postgres.database.azure.com',
+    database: 'savingapp',
+    password: 'Zpi?kam1lNOWAK',
+    port: 5432,
+    ssl: true
+});
+
+app.get('/offer', function(request, response){
+    let id = request.query.id;
+    console.log("Id to: " + id)
+    //response.json({info: id})
+
+    pool.query("SELECT * FROM public.\"Offer\" oferta\n" +
+        "\tJOIN public.\"Photos\" AS photo ON photo.\"offerId\" = oferta.offerid\n" +
+        "\tWHERE oferta.offerid="+id, (error, results) => {
+        if (error) {
+            throw error
+        }
+        var res = results.rows;
+        response.status(200).json(res)
+    })
+    console.log("Aaaa: ")
+    console.log(response)
+})

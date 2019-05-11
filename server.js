@@ -267,6 +267,7 @@ app.get('/offer', function(request, response){
 
     pool.query("SELECT * FROM public.\"Offer\" oferta\n" +
         "\tJOIN public.\"Photos\" AS photo ON photo.\"offerId\" = oferta.offerid\n" +
+        "JOIN public.\"GeoLocations\" loc ON loc.id = oferta.offerid" +
         "\tWHERE oferta.offerid="+id, (error, results) => {
         if (error) {
             throw error

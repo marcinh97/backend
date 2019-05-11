@@ -266,19 +266,25 @@ const pool = new Pool({
 
 app.get('/offer', function(request, response){
     let id = request.query.id;
-    console.log("Id to: " + id)
-    //response.json({info: id})
+    if (isFinite(id)){
+        console.log("Id to: " + id)
+        //response.json({info: id})
 
-    pool.query("SELECT * FROM public.\"Offer\" oferta\n" +
-        "\tJOIN public.\"Photos\" AS photo ON photo.\"offerId\" = oferta.offerid\n" +
-        "JOIN public.\"GeoLocations\" loc ON loc.id = oferta.offerid" +
-        "\tWHERE oferta.offerid="+id, (error, results) => {
-        if (error) {
-            throw error
-        }
-        var res = results.rows;
-        response.status(200).json(res)
-    })
-    console.log("Aaaa: ")
-    console.log(response)
+        pool.query("SELECT * FROM public.\"Offer\" oferta\n" +
+            "\tJOIN public.\"Photos\" AS photo ON photo.\"offerId\" = oferta.offerid\n" +
+            "JOIN public.\"GeoLocations\" loc ON loc.id = oferta.offerid" +
+            "\tWHERE oferta.offerid="+id, (error, results) => {
+            if (error) {
+                throw error
+            }
+            var res = results.rows;
+            response.status(200).json(res)
+        })
+        console.log("Aaaa: ")
+        console.log(response)
+    }
+    else{
+        response.status(200).json("")
+    }
+
 })

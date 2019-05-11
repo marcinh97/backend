@@ -188,7 +188,7 @@ app.post("/register", async function(request, response) {
 
 
     const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "isgoogle"=' + '\'' + false + '\'';
-    const insertQuery = 'INSERT INTO \"UserReg\" (firstname, lastname, email, password, isgoogle) VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + hash + '\' ,\''+false+'\')';
+    const insertQuery = 'INSERT INTO \"UserReg\" (firstname, lastname, email, password, isgoogle) VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + hash + '\' ,\''+false+'\') RETURNING id';
 
 
     await client.connect();
@@ -213,8 +213,11 @@ app.post("/register", async function(request, response) {
         response.end();
     }
     else {
-        await client.query(insertQuery);
-        response.writeHead(200, {'Content-Type': 'text/event-stream'});
+        await client.query(insertQuery).then(res => {
+            response.writeHead(200, {'Content-Type': 'text/event-stream'});
+            response.write(''+res.rows[0].id);
+        });
+
         response.send();
         response.end();
     }
@@ -249,6 +252,7 @@ app.post("/userOffers", async function(request, response){
             return false;
         });
 });
+
 
 const Pool = require('pg').Pool
 const pool = new Pool({

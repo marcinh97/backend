@@ -12,6 +12,70 @@ const server = app.listen(app.get('port'), () => {
     console.log(`Listening on ${ server.address().port }`);
 });
 
+const multer = require("multer");
+const cloudinary = require("cloudinary");
+const cloudinaryStorage = require("multer-storage-cloudinary");
+
+
+cloudinary.config({
+    cloud_name: 'daiq9mb50',
+    api_key: '582769683868646',
+    api_secret: 'GHvikB1kgtQeQYdgd94tlU-o9v8'
+});
+const storage = cloudinaryStorage({
+    cloudinary: cloudinary,
+    folder: "demo",
+    allowedFormats: ["jpg", "png"],
+    transformation: [{ width: 500, height: 500, crop: "limit" }]
+});
+// const parser = multer({ storage: storage });
+
+
+var upload = multer({ storage: storage });
+
+// let upload = multer();
+app.post('/images',upload.array('fileItem',12),function (req, res) {
+    var datetime = new Date(Date.now());
+    var dateString = datetime.getFullYear()+'-'+datetime.getMonth()+'-'+datetime.getDay();
+    console.log(dateString);
+    console.log(req.body.name);
+    console.log(req.body.description);
+    console.log(req.body.category);
+    var list = req.files;
+    console.log(list.forEach((el,ind,[])=>console.log(el.url, ind)));
+
+    const client = new pg.Client(config);
+    client.connect(err => {
+        if (err){
+            console.log(err)
+        }
+        else {
+            const selectQuery = 'INSERT INTO "Offer"("name","description","phone","categoryNum","status","userId","offerdate") values(\' ' + req.body.name + '\', \''+ req.body.description + '\',\'' + req.body.phone + '\''+',2,1, ' +  req.body.userId +', \'' + dateString +'\');';
+
+            client.query(selectQuery)
+                .then(res => {
+                    console.log("dodalo!");
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+            const offerSelectQ = 'SELECT MAX("offerid") FROM "Offer"';
+            client.query(offerSelectQ)
+                .then(res => {
+                    console.log(res.rows[0].max);
+                    list.forEach((el,ind,[])=>addPhoto(el.url,res.rows[0].max));
+
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+        }
+    });
+
+    res.writeHead(200, {'Content-Type': 'text/event-stream'});
+    res.send();
+
+});
 app.post('/checkUser',function(req,res)
 {
     const {OAuth2Client} = require('google-auth-library');
@@ -42,7 +106,7 @@ function checkIfExists(id)
         }
         else {
             console.log(id);
-            const selectQuery = 'SELECT * FROM public."Users" WHERE "id"=' + '\'' + id + '\'';
+            const selectQuery = 'SELECT * FROM "UserReg" WHERE "googleid"=' + '\'' + id + '\'';
 
             client.query(selectQuery)
                 .then(res => {
@@ -54,7 +118,7 @@ function checkIfExists(id)
                     }
                     else
                     {
-                        return false;
+                       return false;
                     }
 
                 })
@@ -103,9 +167,9 @@ function checkOrSaveUser(id, name, lastName, email) {
         }
         else {
             console.log(id);
-            const selectQuery = 'SELECT * FROM public."Users" WHERE "id"=' + '\'' + id + '\'';
+            const selectQuery = 'SELECT * FROM "UserReg" WHERE "googleid"=' + '\'' + id + '\'';
             console.log(selectQuery);
-            const query = 'INSERT INTO public."Users" VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + id + '\')';
+            const query = 'INSERT INTO \"UserReg\" ("firstname", "lastname", "email","googleid", "isgoogle") VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + id + '\', true )';
 
             client.query(selectQuery)
                 .then(res => {
@@ -117,7 +181,7 @@ function checkOrSaveUser(id, name, lastName, email) {
                     }
                     else
                     {
-                        console.log("powinienem dodac przepraszam moj masterze");
+                        // console.log("powinienem dodac");
                         client.query(query);
                     }
 

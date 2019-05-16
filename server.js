@@ -35,6 +35,7 @@ var upload = multer({ storage: storage });
 
 // let upload = multer();
 app.post('/images',upload.array('fileItem',12),function (req, res) {
+    console.log("Jestem w metodzie /images");
     var datetime = new Date(Date.now());
     var dateString = datetime.getFullYear()+'-'+datetime.getMonth()+'-'+datetime.getDay();
     console.log(dateString);

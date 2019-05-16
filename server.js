@@ -33,9 +33,30 @@ const storage = cloudinaryStorage({
 
 var upload = multer({ storage: storage });
 
+function addPhoto(photoUrl, offerID)
+{
+    const client = new pg.Client(config);
+    client.connect(err => {
+        if (err){
+            console.log(err)
+        }
+        else {
+            const query = "INSERT INTO \"Photos\" values('" + photoUrl + "', " + offerID + ", false);";
+
+            client.query(query)
+                .then(res => {
+                    console.log("dodało zdjęcie");
+
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+        }
+    });
+}
+
 // let upload = multer();
 app.post('/images',upload.array('fileItem',12),function (req, res) {
-    console.log("Jestem w metodzie /images");
     var datetime = new Date(Date.now());
     var dateString = datetime.getFullYear()+'-'+datetime.getMonth()+'-'+datetime.getDay();
     console.log(dateString);
@@ -45,31 +66,26 @@ app.post('/images',upload.array('fileItem',12),function (req, res) {
     var list = req.files;
     console.log(list.forEach((el,ind,[])=>console.log(el.url, ind)));
 
+
     const client = new pg.Client(config);
     client.connect(err => {
         if (err){
             console.log(err)
         }
         else {
-            const selectQuery = 'INSERT INTO "Offer"("name","description","phone","categoryNum","status","userId","offerdate") values(\' ' + req.body.name + '\', \''+ req.body.description + '\',\'' + req.body.phone + '\''+',2,1, ' +  req.body.userId +', \'' + dateString +'\');';
-
+            const selectQuery = 'INSERT INTO "Offer"("name","description","phone","categoryNum","status","userId","offerdate") values(\' ' + req.body.name + '\', \''+ req.body.description + '\',\'' + req.body.phone + '\''+',2,1, ' +  req.body.userId +', \'' + dateString +'\') RETURNING offerid;';
+            var offerid;
             client.query(selectQuery)
                 .then(res => {
-                    console.log("dodalo!");
+                    offerid= res.rows[0].offerid;
+                    list.forEach((el,ind,[])=>addPhoto(el.url,offerid));
                 })
                 .catch(err => {
                     console.log(err);
                 });
-            const offerSelectQ = 'SELECT MAX("offerid") FROM "Offer"';
-            client.query(offerSelectQ)
-                .then(res => {
-                    console.log(res.rows[0].max);
-                    list.forEach((el,ind,[])=>addPhoto(el.url,res.rows[0].max));
 
-                })
-                .catch(err => {
-                    console.log(err);
-                });
+
+
         }
     });
 
@@ -77,6 +93,8 @@ app.post('/images',upload.array('fileItem',12),function (req, res) {
     res.send();
 
 });
+
+
 app.post('/checkUser',function(req,res)
 {
     const {OAuth2Client} = require('google-auth-library');

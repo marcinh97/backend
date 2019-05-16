@@ -308,15 +308,18 @@ app.post("/register", async function(request, response) {
 
 });
 
-
-app.post("/userOffers", async function(request, response){
-    let id = request.body.id;
-
-    console.log('id: '+id);
+app.post("/allOffers", async function(request, response){
 
     const client = new pg.Client(config);
 
-    const selectQuery = 'SELECT * FROM "Offer" WHERE "userId"=' + '\'' + id + '\'';
+    //const selectQuery = 'SELECT * FROM "Offer" JOIN "Photos" WHERE "userId"=' + '\'' + id + '\'';
+    // const selectQuery = "SELECT * FROM public.\"Offer\" oferta\n" +
+    //     "\tJOIN public.\"Photos\" AS photo ON photo.\"offerId\" = oferta.offerid\n" +
+    //     "\tWHERE \"userId\"=" + '\'' + id + '\'';
+
+
+    const selectQuery = "SELECT offerid, min(name) as name,min(description) as description, min(oferta.\"categoryNum\") as \"categoryNum\" ,min(status) as \"status\",min(url) as url FROM \"Offer\" as oferta LEFT JOIN \"Photos\" as photo on photo.\"offerId\" = oferta.offerId GROUP BY oferta.offerId";
+
 
     await client.connect();
     await client.query(selectQuery)
@@ -326,6 +329,7 @@ app.post("/userOffers", async function(request, response){
 
             } else {
                 console.log('jeste tu');
+                console.log(res.rows[0].categoryNum);
                 response.send(JSON.stringify(res.rows));
                 response.status(200);
             }
@@ -336,6 +340,41 @@ app.post("/userOffers", async function(request, response){
         });
 });
 
+
+app.post("/userOffers", async function(request, response){
+    let id = request.body.id;
+
+    console.log('id: '+id);
+
+    const client = new pg.Client(config);
+
+    //const selectQuery = 'SELECT * FROM "Offer" JOIN "Photos" WHERE "userId"=' + '\'' + id + '\'';
+    // const selectQuery = "SELECT * FROM public.\"Offer\" oferta\n" +
+    //     "\tJOIN public.\"Photos\" AS photo ON photo.\"offerId\" = oferta.offerid\n" +
+    //     "\tWHERE \"userId\"=" + '\'' + id + '\'';
+
+
+    const selectQuery = "SELECT offerid, min(name) as name,min(description) as description, min(oferta.\"categoryNum\") as \"categoryNum\" ,min(status) as \"status\",min(url) as url FROM \"Offer\" as oferta left JOIN \"Photos\" as photo on photo.\"offerId\" = oferta.offerId WHERE \"userId\"=" + '\''+  id + '\'' +" GROUP BY oferta.offerId";
+
+
+    await client.connect();
+    await client.query(selectQuery)
+        .then(res => {
+            if (res.rows.length <= 0) {
+                response.status(404);
+
+            } else {
+                console.log('jeste tu');
+                console.log(res.rows[0].id);
+                response.send(JSON.stringify(res.rows));
+                response.status(200);
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            return false;
+        });
+});
 
 const Pool = require('pg').Pool
 const pool = new Pool({

@@ -33,27 +33,6 @@ const storage = cloudinaryStorage({
 
 var upload = multer({ storage: storage });
 
-function addPhoto(photoUrl, offerID)
-{
-    const client = new pg.Client(config);
-    client.connect(err => {
-        if (err){
-            console.log(err)
-        }
-        else {
-            const query = "INSERT INTO \"Photos\" values('" + photoUrl + "', " + offerID + ", false);";
-
-            client.query(query)
-                .then(res => {
-                    console.log("dodało zdjęcie");
-
-                })
-                .catch(err => {
-                    console.log(err);
-                });
-        }
-    });
-}
 
 // let upload = multer();
 app.post('/images',upload.array('fileItem',12),function (req, res) {
@@ -93,8 +72,6 @@ app.post('/images',upload.array('fileItem',12),function (req, res) {
     res.send();
 
 });
-
-
 app.post('/checkUser',function(req,res)
 {
     const {OAuth2Client} = require('google-auth-library');
@@ -148,6 +125,28 @@ function checkIfExists(id)
     });
 }
 
+function addPhoto(photoUrl, offerID)
+{
+    const client = new pg.Client(config);
+    client.connect(err => {
+        if (err){
+            console.log(err)
+        }
+        else {
+            const query = "INSERT INTO \"Photos\" values('" + photoUrl + "', " + offerID + ", false);";
+
+            client.query(query)
+                .then(res => {
+                    console.log("dodało zdjęcie");
+
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+        }
+    });
+}
+
 app.post('/try', function(req, res){
     console.log("wysylam");
     const {OAuth2Client} = require('google-auth-library');
@@ -159,14 +158,40 @@ app.post('/try', function(req, res){
         });
         const payload = ticket.getPayload();
         const userid = payload['sub'];
+
+        var myid = await checkOrSaveUser(ticket.getUserId(), ticket.getPayload().given_name, ticket.getPayload().family_name, ticket.getPayload().email);
+        console.log('uwaga' + myid);
         res.writeHead(200, {'Content-Type': 'text/event-stream'});
-        res.write('' + ticket.getPayload().given_name);
+        res.write('' + myid );
         res.send();
-        checkOrSaveUser(ticket.getUserId(), ticket.getPayload().given_name, ticket.getPayload().family_name, ticket.getPayload().email);
     }
     verify().catch(console.error);
 
 });
+
+// app.post('/additem',(req,res)=> {
+//     console.log("ADD ITEM");
+//     console.log(req.body.name);
+//     // console.log(req.file) ;// to see what is returned to you
+//     // const image = {};
+//     // image.url = req.file.url;
+//     // image.id = req.file.public_id;
+//     // console.log(image.url);
+//     res.writeHead(200, {'Content-Type': 'text/event-stream'});
+//     res.write('' + 'OKAY!');
+//     res.send();
+// });
+//
+// app.post('/product', function(req,res){
+//     console.log('/product');
+//     console.log(req.body);
+//     if(req.files)
+//         req.files.forEach(function(file)
+//         {
+//             console.log(file);
+//         })
+// });
+
 
 const config = {
     host: 'serverzpi.postgres.database.azure.com',
@@ -177,7 +202,7 @@ const config = {
     ssl: true
 };
 
-function checkOrSaveUser(id, name, lastName, email) {
+async function checkOrSaveUser(idg, name, lastName, email) {
     const client = new pg.Client(config);
 
     client.connect(err => {
@@ -185,196 +210,51 @@ function checkOrSaveUser(id, name, lastName, email) {
             console.log(err)
         }
         else {
-            console.log(id);
-            const selectQuery = 'SELECT * FROM "UserReg" WHERE "googleid"=' + '\'' + id + '\'';
+            console.log(idg);
+            const selectQuery = 'SELECT * FROM "UserReg" WHERE "googleid"=' + '\'' + idg + '\'';
             console.log(selectQuery);
-            const query = 'INSERT INTO \"UserReg\" ("firstname", "lastname", "email","googleid", "isgoogle") VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + id + '\', true )';
+            const query = 'INSERT INTO \"UserReg\" ("firstname", "lastname", "email","googleid", "isgoogle") VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + idg + '\', true ) RETURNING id;';
 
             client.query(selectQuery)
                 .then(res => {
-                    const rows = res.rows;
-                    console.log(rows.length);
+
                     if(res.rows.length>0)
                     {
+                        console.log(res.rows[0].id);
                         console.log('ISTNIEJEEEE');
+                        return res.rows[0].id;
                     }
                     else
                     {
                         // console.log("powinienem dodac");
-                        client.query(query);
+                        client.query(query)
+                        .then (res =>
+                        {
+                            const id = res.rows[0].id;
+                            console.log(res.rows[0].id);
+                            return res.rows[0].id;
+                        })
                     }
 
                 })
                 .catch(err => {
                     console.log(err);
                 });
-        }
+                }
     });
 }
 
-app.post("/tryLogin", async function(request, response){
-    let password = request.body.password;
-    let email = request.body.email;
-
-
-
-    const client = new pg.Client(config);
-
-
-    const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "isgoogle"=' + '\'' + false + '\'';
-    //const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "password"=' + '\'' + hash + '\'';
-    await client.connect();
-    await client.query(selectQuery)
-        .then(res => {
-            if (res.rows.length <= 0) {
-                console.log("brak takiego maila");
-                response.writeHead(404, {'Content-Type': 'text/event-stream'});
-                response.send();
-                response.end();
-
-            } else {
-
-                bcrypt.compare(password,res.rows[0].password, function (err, result) {
-                    if (result == true) {
-                        console.log("jest mail i haslo");
-                        response.writeHead(200, {'Content-Type': 'text/event-stream'});
-                        response.write(''+res.rows[0].id);
-                        response.send();
-                        response.end();
-                    } else {
-                        console.log("jest mail ale bez hasla");
-                        response.writeHead(404, {'Content-Type': 'text/event-stream'});
-                        response.send();
-                        response.end();
-                    }
-
-                });
-
-
-            }
-        })
-        .catch(err => {
-            console.log(err);
-            return false;
+//autoryzacja przy wejsciu
+//onEnter={requireAuth}  wtedy to w Route
+function requireAuth(nextState, replace, next) {
+    if (!authenticated) {
+        replace({
+            pathname: "/login",
+            state: {nextPathname: nextState.location.pathname}
         });
-});
-
-app.post("/register", async function(request, response) {
-    let name = request.body.name;
-    let lastName = request.body.username;
-    let password = request.body.password;
-    let email = request.body.email;
-
-    let hash = bcrypt.hashSync(password, 10);
-
-    const client = new pg.Client(config);
-
-
-    const selectQuery = 'SELECT * FROM "UserReg" WHERE "email"=' + '\'' + email + '\' AND "isgoogle"=' + '\'' + false + '\'';
-    const insertQuery = 'INSERT INTO \"UserReg\" (firstname, lastname, email, password, isgoogle) VALUES ' + '(\' ' +  name + '\',\'' + lastName + '\',\'' + email + '\',\'' + hash + '\' ,\''+false+'\') RETURNING id';
-
-
-    await client.connect();
-    var exist = await client.query(selectQuery)
-        .then(res => {
-            if (res.rows.length <= 0) {
-                return false;
-
-            } else {
-                return true;
-            }
-        })
-        .catch(err => {
-            console.log(err);
-            return false;
-        });
-
-    if(exist)
-    {
-        response.writeHead(404, {'Content-Type': 'text/event-stream'});
-        response.send();
-        response.end();
     }
-    else {
-        await client.query(insertQuery).then(res => {
-            response.writeHead(200, {'Content-Type': 'text/event-stream'});
-            response.write(''+res.rows[0].id);
-        });
-
-        response.send();
-        response.end();
-    }
-
-
-});
-
-app.post("/allOffers", async function(request, response){
-
-    const client = new pg.Client(config);
-
-    //const selectQuery = 'SELECT * FROM "Offer" JOIN "Photos" WHERE "userId"=' + '\'' + id + '\'';
-    // const selectQuery = "SELECT * FROM public.\"Offer\" oferta\n" +
-    //     "\tJOIN public.\"Photos\" AS photo ON photo.\"offerId\" = oferta.offerid\n" +
-    //     "\tWHERE \"userId\"=" + '\'' + id + '\'';
-
-
-    const selectQuery = "SELECT offerid, min(name) as name,min(description) as description, min(oferta.\"categoryNum\") as \"categoryNum\" ,min(status) as \"status\",min(url) as url FROM \"Offer\" as oferta LEFT JOIN \"Photos\" as photo on photo.\"offerId\" = oferta.offerId GROUP BY oferta.offerId";
-
-
-    await client.connect();
-    await client.query(selectQuery)
-        .then(res => {
-            if (res.rows.length <= 0) {
-                response.status(404);
-
-            } else {
-                console.log('jeste tu');
-                console.log(res.rows[0].categoryNum);
-                response.send(JSON.stringify(res.rows));
-                response.status(200);
-            }
-        })
-        .catch(err => {
-            console.log(err);
-            return false;
-        });
-});
-
-
-app.post("/userOffers", async function(request, response){
-    let id = request.body.id;
-
-    console.log('id: '+id);
-
-    const client = new pg.Client(config);
-
-    //const selectQuery = 'SELECT * FROM "Offer" JOIN "Photos" WHERE "userId"=' + '\'' + id + '\'';
-    // const selectQuery = "SELECT * FROM public.\"Offer\" oferta\n" +
-    //     "\tJOIN public.\"Photos\" AS photo ON photo.\"offerId\" = oferta.offerid\n" +
-    //     "\tWHERE \"userId\"=" + '\'' + id + '\'';
-
-
-    const selectQuery = "SELECT offerid, min(name) as name,min(description) as description, min(oferta.\"categoryNum\") as \"categoryNum\" ,min(status) as \"status\",min(url) as url FROM \"Offer\" as oferta left JOIN \"Photos\" as photo on photo.\"offerId\" = oferta.offerId WHERE \"userId\"=" + '\''+  id + '\'' +" GROUP BY oferta.offerId";
-
-
-    await client.connect();
-    await client.query(selectQuery)
-        .then(res => {
-            if (res.rows.length <= 0) {
-                response.status(404);
-
-            } else {
-                console.log('jeste tu');
-                console.log(res.rows[0].id);
-                response.send(JSON.stringify(res.rows));
-                response.status(200);
-            }
-        })
-        .catch(err => {
-            console.log(err);
-            return false;
-        });
-});
+    next();
+};
 
 const Pool = require('pg').Pool
 const pool = new Pool({

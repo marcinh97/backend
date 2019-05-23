@@ -26,6 +26,23 @@ const storage = cloudinaryStorage({
 });
 // const parser = multer({ storage: storage });
 var upload = multer({ storage: storage });
+
+function getCategoryFromName(name)
+{
+    if(name==='jedzenie')
+        return 1;
+    if(name==='zabawki')
+        return 2;
+    if(name==='RTV/AGD')
+        return 3;
+    if(name==='ubrania')
+        return 4;
+    if(name==='akcesoria sportowe')
+        return 5;
+    if(name==='meble')
+        return 6;
+}
+
 function addPhoto(photoUrl, offerID)
 {
     const client = new pg.Client(config);
@@ -48,34 +65,37 @@ function addPhoto(photoUrl, offerID)
 // let upload = multer();
 app.post('/images',upload.array('fileItem',12),function (req, res) {
     var datetime = new Date(Date.now());
-    var dateString = datetime.getFullYear()+'-'+datetime.getMonth()+'-'+datetime.getDay();
+    var dateString = datetime.getFullYear() + '-' + datetime.getMonth() + '-' + datetime.getDay();
     console.log(dateString);
     console.log(req.body.name);
     console.log(req.body.description);
     console.log(req.body.category);
     var list = req.files;
-    console.log(list.forEach((el,ind,[])=>console.log(el.url, ind)));
+    console.log(list.forEach((el, ind, []) => console.log(el.url, ind)));
+
+
     const client = new pg.Client(config);
     client.connect(err => {
-        if (err){
+        if (err) {
             console.log(err)
         }
         else {
-            const selectQuery = 'INSERT INTO "Offer"("name","description","phone","categoryNum","status","userId","offerdate") values(\' ' + req.body.name + '\', \''+ req.body.description + '\',\'' + req.body.phone + '\''+',2,1, ' +  req.body.userId +', \'' + dateString +'\') RETURNING offerid;';
+            const selectQuery = 'INSERT INTO "Offer"("name","description","phone","categoryNum","status","userId","offerdate") ' +
+                'values(\' ' + req.body.name + '\', \'' + req.body.description + '\',\'' + req.body.phone + '\'' + ',' +
+                getCategoryFromName(req.body.category) + ',1, ' + req.body.userId + ', \'' + dateString + '\') RETURNING offerid;';
             var offerid;
             client.query(selectQuery)
                 .then(res => {
-                    offerid= res.rows[0].offerid;
-                    list.forEach((el,ind,[])=>addPhoto(el.url,offerid));
+                    offerid = res.rows[0].offerid;
+                    list.forEach((el, ind, []) => addPhoto(el.url, offerid));
                 })
                 .catch(err => {
                     console.log(err);
                 });
         }
     });
-    res.writeHead(200, {'Content-Type': 'text/event-stream'});
-    res.send();
 });
+
 app.post('/checkUser',function(req,res)
 {
     const {OAuth2Client} = require('google-auth-library');

@@ -12,7 +12,6 @@ const multer = require("multer");
 const cloudinary = require("cloudinary");
 const cloudinaryStorage = require("multer-storage-cloudinary");
 
-
 cloudinary.config({
     cloud_name: 'daiq9mb50',
     api_key: '582769683868646',

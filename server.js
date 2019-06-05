@@ -364,6 +364,7 @@ const pool = new Pool({
     port: 5432,
     ssl: true
 });
+
 app.get('/offer', function(request, response){
     let id = request.query.id;
     if (isFinite(id)){

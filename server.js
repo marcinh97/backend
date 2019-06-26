@@ -167,7 +167,7 @@ const config = {
     host: 'charity-chain-zpi-2019.postgres.database.azure.com',
     user: 'agata@charity-chain-zpi-2019',
     password: 'Zpi?kam1lNOWAK',
-    database: 'savingapp',
+    database: 'zpi',
     port: 5432,
     ssl: true
 };
@@ -360,7 +360,7 @@ const pool = new Pool({
     host: 'charity-chain-zpi-2019.postgres.database.azure.com',
     user: 'agata@charity-chain-zpi-2019',
     password: 'Zpi?kam1lNOWAK',
-    database: 'savingapp',
+    database: 'zpi',
     port: 5432,
     ssl: true
 });

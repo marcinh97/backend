@@ -164,8 +164,8 @@ app.post('/try', function(req, res){
     verify().catch(console.error);
 });
 const config = {
-    host: 'serverzpi.postgres.database.azure.com',
-    user: 'ZpiAdmin@serverzpi',
+    host: 'charity-chain-zpi-2019.postgres.database.azure.com',
+    user: 'agata@charity-chain-zpi-2019',
     password: 'Zpi?kam1lNOWAK',
     database: 'savingapp',
     port: 5432,
@@ -357,10 +357,10 @@ app.post("/userOffers", async function(request, response){
 
 const Pool = require('pg').Pool
 const pool = new Pool({
-    user: 'ZpiAdmin@serverzpi',
-    host: 'serverzpi.postgres.database.azure.com',
-    database: 'savingapp',
+    host: 'charity-chain-zpi-2019.postgres.database.azure.com',
+    user: 'agata@charity-chain-zpi-2019',
     password: 'Zpi?kam1lNOWAK',
+    database: 'savingapp',
     port: 5432,
     ssl: true
 });

@@ -373,14 +373,14 @@ app.get('/offer', function(request, response){
         pool.query("SELECT * FROM public.\"Offer\" oferta\n" +
             "\tJOIN public.\"Photos\" AS photo ON photo.\"offerId\" = oferta.offerid\n" +
             "JOIN public.\"GeoLocations\" loc ON loc.id = oferta.offerid\n" +
-            +" JOIN public.\"UserReg\" AS use ON use.id = oferta.\"userId\" " +
+            // +" JOIN public.\"UserReg\" AS use ON use.id = oferta.\"userId\" " +
             "\tWHERE oferta.offerid="+id, (error, results) => {
             if (error) {
                 console.log("Blad ")
                 console.log("SELECT * FROM public.\"Offer\" oferta\n" +
                     "\tJOIN public.\"Photos\" AS photo ON photo.\"offerId\" = oferta.offerid\n" +
                     "JOIN public.\"GeoLocations\" loc ON loc.id = oferta.offerid\n" +
-                    +" JOIN public.\"UserReg\" AS use ON use.id = oferta.\"userId\" " +
+                    // +" JOIN public.\"UserReg\" AS use ON use.id = oferta.\"userId\" " +
                     "\tWHERE oferta.offerid="+id)
                 return
             }
